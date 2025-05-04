@@ -14,32 +14,22 @@ from sklearn.utils import shuffle
 
 def get_all_dir(directory_path):
     res = []
-    # 循环遍历这些条目，检查哪些是文件夹
     for dir_name in os.listdir(directory_path):
         if dir_name.startswith(".ipynb_checkpoints"):
             continue
-        # 使用os.path.join来获取完整的路径
         full_path = os.path.join(directory_path, dir_name)
-        # 检查这个路径是否是一个目录
         if os.path.isdir(full_path):
             res.append(dir_name)
     return res
 
 
 def get_csv_data(file_path):
-    # 加载 Excel 文件
     df = pd.read_csv(file_path)
-    # 显示 DataFrame 的前几行，以确认正确读取
-
-    # 提取特定的列
     id_evaluation_list = df[['Patient ID', 'Radiological Evaluation']]
 
-    # category_id - 1  Mild=0, Moderate=1, Severe=2
     id_evaluation_dict = {}
     for index, row in id_evaluation_list.iterrows():
         id_evaluation_dict[str(row['Patient ID'])] = row['Radiological Evaluation'] - 1
-
-    # print(id_evaluation_dict)
 
     images_ids = df['Patient ID'].tolist()
 
@@ -56,8 +46,6 @@ def load_CirrMRI_classification_data(args):
     t2_data_path = os.path.join(args.data_root, 'Cirrhosis_T2_2D')
     data_path = t2_data_path
     paired_csv_file_path = os.path.join(args.data_root, 'Metadata', 'T1&T2_Paired_age_gender_evaluation.csv')
-    t2_csv_file_path = os.path.join(args.data_root, 'Metadata', 'T2_age_gender_evaluation.csv')
-    t2_images_ids, t2_id_evaluation_dict = get_csv_data(t2_csv_file_path)
     paired_images_ids, paired_id_evaluation_dict = get_csv_data(paired_csv_file_path)
 
     """ Names """
@@ -76,10 +64,6 @@ def load_CirrMRI_classification_data(args):
         test_path = data_path
 
     train_names = shuffle(train_names, random_state=42)
-
-    # print(f"train_patients: {train_names}")
-    # print(f"valid_patients: {valid_names}")
-    # print(f"test_patients: {test_names}")
 
     train_len, valid_len, test_len = 0, 0, 0
     """ Training data """
@@ -188,13 +172,9 @@ def main(args):
 
     model = eval(build_model)(num_classes=args.num_classes).to(device)
 
-    # pg = [p for p in model.parameters() if p.requires_grad]
     pg = get_params_groups(model, weight_decay=args.wd)
     optimizer = optim.AdamW(pg, lr=args.lr, weight_decay=args.wd)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)
-
-    # lr_scheduler = create_lr_scheduler(optimizer, len(train_loader), args.epochs,
-                                    #    warmup=True, warmup_epochs=1)
 
     best_acc = 0.
     start_epoch = 0
@@ -234,17 +214,6 @@ def main(args):
         elif best_acc > val_acc:
             early_stopping_count += 1
 
-        # if epoch % 10 == 0:
-        #     print_and_save(train_log_path, f"epoch: {epoch}, learning rate: {optimizer.state_dict()['param_groups'][0]['lr']}")
-        #     checkpoint = {
-        #         "net": model.state_dict(),
-        #         'optimizer': optimizer.state_dict(),
-        #         "epoch": epoch,
-        #         'lr_schedule': lr_scheduler.state_dict()
-        #     }
-        #
-        #     torch.save(checkpoint, f'{weight_path}/checkpoint/ckpt_%s.pth' % (str(epoch)))
-
         #add loss, acc and lr into tensorboard
         print_and_save(train_log_path, "[epoch {}] train accuracy: {}, val accuracy: {},  train loss: {}, val loss: {}".format(epoch, round(train_acc, 3), round(val_acc, 3), round(train_loss, 3), round(val_loss, 3)))
 
@@ -267,7 +236,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=32)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--wd', type=float, default=1e-5)
-    parser.add_argument('--data_root', type=str, default="/root/ZJ/Dataset/liver/CirrMRI600+")
+    parser.add_argument('--data_root', type=str, default="data/CirrMRI600+")
     parser.add_argument('--modality', type=str, default="t2")
     parser.add_argument('--save_dir', type=str, default="files_t2_2d")
     parser.add_argument('--early_stopping_patience', type=int, default=20)
