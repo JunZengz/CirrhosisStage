@@ -180,7 +180,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # vgg_19   resnet50   mobilenetv3_S  convnext_base   pvt_v2_b2
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_name', type=str, default='resnet50',
                         help='model name')
