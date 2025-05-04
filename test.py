@@ -15,32 +15,22 @@ from sklearn.utils import shuffle
 
 def get_all_dir(directory_path):
     res = []
-    # 循环遍历这些条目，检查哪些是文件夹
     for dir_name in os.listdir(directory_path):
         if dir_name.startswith(".ipynb_checkpoints"):
             continue
-        # 使用os.path.join来获取完整的路径
         full_path = os.path.join(directory_path, dir_name)
-        # 检查这个路径是否是一个目录
         if os.path.isdir(full_path):
             res.append(dir_name)
     return res
 
 
 def get_csv_data(file_path):
-    # 加载 Excel 文件
     df = pd.read_csv(file_path)
-    # 显示 DataFrame 的前几行，以确认正确读取
-
-    # 提取特定的列
     id_evaluation_list = df[['Patient ID', 'Radiological Evaluation']]
 
-    # category_id - 1  Mild=0, Moderate=1, Severe=2
     id_evaluation_dict = {}
     for index, row in id_evaluation_list.iterrows():
         id_evaluation_dict[str(row['Patient ID'])] = row['Radiological Evaluation'] - 1
-
-    # print(id_evaluation_dict)
 
     images_ids = df['Patient ID'].tolist()
 
@@ -57,8 +47,6 @@ def load_CirrMRI_classification_data(args):
     t2_data_path = os.path.join(args.data_root, 'Cirrhosis_T2_2D')
     data_path = t2_data_path
     paired_csv_file_path = os.path.join(args.data_root, 'Metadata', 'T1&T2_Paired_age_gender_evaluation.csv')
-    t2_csv_file_path = os.path.join(args.data_root, 'Metadata', 'T2_age_gender_evaluation.csv')
-    t2_images_ids, t2_id_evaluation_dict = get_csv_data(t2_csv_file_path)
     paired_images_ids, paired_id_evaluation_dict = get_csv_data(paired_csv_file_path)
 
     """ Names """
@@ -185,7 +173,7 @@ if __name__ == '__main__':
                         help='model name')
     parser.add_argument('--num_classes', type=int, default=3)
     parser.add_argument('--img_size', type=int, default=256)
-    parser.add_argument('--data_root', type=str, default="/root/ZJ/Dataset/liver/CirrMRI600+")
+    parser.add_argument('--data_root', type=str, default="data/CirrMRI600+")
     parser.add_argument('--modality', type=str, default="t2")
     parser.add_argument('--save_dir', type=str, default="files_t2_2d")
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
